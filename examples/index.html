@@ -8,10 +8,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Lato&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="node_modules/@ocdladefense/modal/src/css/loading.css" />
+    <!-- <link rel="stylesheet" href="node_modules/@ocdladefense/modal/src/css/loading.css" />
     <link rel="stylesheet" href="node_modules/@ocdladefense/modal/src/css/modal.css" />
-    <link rel="stylesheet" href="node_modules/@ocdladefense/modal/src/css/inline-modal.css" />
-    
+    <link rel="stylesheet" href="node_modules/@ocdladefense/modal/src/css/inline-modal.css" /> -->
+
 
     <script src="https://kit.fontawesome.com/c2278a45b9.js" crossorigin="anonymous">
     </script>
@@ -21,18 +21,45 @@
 <body tab-index="-1">
     <!-- Here is our custom web component. -->
     <!-- <webc-autocomplete id="query" style="display:inline-block; width:275px;" /> -->
-    <webc-events calendar-id="events@thebierelibrary.com" date-start="2023-06-30" limit="" />
+    <p>ORS 813.010(d) has been added to include anyone who provides a blood alcohol content 0.08 or higher within two
+        hours after driving. This is similar to the Washington State DUII statute.</p>
+
+    <p> Also be advised that 813.010(6)(d)(B) has been added to provide for a $2000 fine for someone who provides a BAC
+        0.15 within two hours of driving.</p>
+
+    <p> ORS 813.010 has been amended to read:</p>
+
+    <webc-ors chapter="813" section="010"></webc-ors>
+
+    <p>Oregon Laws 2021 Ch. 480, Sec. 1</p>
+
+    <p> 2021 LEGISLATIVE UPDATE:
+        Senate Bill 201 Provides that person commits DUII if person has BAC of 0.08 or more within two hours after
+        driving vehicle.</p>
+
+    <p> Provides that a person commits DUII if that person is found to have a .08 or higher percent blood alcohol
+        level within two hours of driving so long as the prosecution can prove the person did not drink between driving
+        and the breath or blood test.</p>
+
+    <p> Clarifies that fine for DUII is enhanced if person has a .15 percent or higher blood alcohol level within two
+        hours of driving.</p>
+
+    <p> Adds language that is already included in other repeat-DUII statutes to the third-time felony DUII law (ORS
+        813.011), along with ORS 163.118 (criminally negligent DUII homicide with three priors) and ORS 163.185 (DUII
+        assault with three priors) so that out-of-state convictions for DUII are counted as prior DUII convictions.</p>
+
+    <p> Amends ORS 163.118, 163.185, 813.010, 813.011 and 813.300.</p>
 </body>
 
 <script type="module">
 
 
-    import { WebcEvents } from "../src/WebcEvents.js";
+    import { WebcOrs } from "../src/WebcORS.js";
 
     window.onload = init;
 
     function init() {
-        customElements.define("webc-events", WebcEvents);
+        customElements.define("webc-ors", WebcOrs);
     }
 </script>
 
@@ -40,5 +67,3 @@
 
 
 </html>
-
-

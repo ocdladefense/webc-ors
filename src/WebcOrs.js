@@ -1,7 +1,8 @@
 import { HttpClient } from "../node_modules/@ocdladefense/lib-http/HttpClient.js";
 import { Url } from "../node_modules/@ocdladefense/lib-http/Url.js";
-
+import { OrsChapter } from "../dev_modules/node-ors/dist/chapter.js";
 import { OrsApiMock } from "../dev_modules/lib-mock/ORSApiMock.js";
+import { HttpCache } from "../node_modules/@ocdladefense/lib-http/HttpCache.js";
 export { WebcOrs };
 
 // Pretending what the current environment looks like for this machine/application.
@@ -24,11 +25,11 @@ class WebcOrs extends HTMLElement {
 
     section = null;
 
-    constructor() {
+    constructor(chapter = null, section = null) {
         super();
 
-        this.chapter = this.getAttribute("chapter");
-        this.section = this.getAttribute("section");
+        this.chapter = chapter || this.getAttribute("chapter");
+        this.section = section || this.getAttribute("section");
     }
 
     // Called each time the element is appended to the window/another element
@@ -44,56 +45,70 @@ class WebcOrs extends HTMLElement {
         const config = {};
         const client = new HttpClient(config);
 
-        let url = WebcOrs.queryBySection(this.chapter, this.section);
+        let url = WebcOrs.queryBySection(this.chapter);
         HttpClient.register("appdev.ocdla.org", new OrsApiMock());
 
         const req = new Request(url);
+        //some of this functionality should happen in HttpClient specifically HttpClient needs to cache responses using The HttpCache class
+        let resp = await client.send(req);
 
-        const resp = await client.send(req);
+
         //wasn't working like this so went back to old way temporarily 
         //await client.send(req)
-        resp.json()
-            .then(sections => {
+        if (resp.bodyUsed) {
+            throw new Error("Go learn about body Used");
+        }
+        let html = await resp.text();
 
-                if (sections.error) {
-                    throw new Error(sections.message, { cause: sections });
-                }
-                console.log(sections);
+        this.list.innerHTML = this.render(html);
 
-                this.list.innerHTML = this.render(sections).join("\n");
-            })
-            .catch(error => {
-                // alert('Error: ' + error.message);
-                console.error(error);
-                if (env.displayErrors && error.cause.code == "RANGE_EMPTY") { // Might help the customer.
-                    this.list.innerHTML = "Free to Register";
-                }
-            });
     }
+    async foobar() {
+        const serializer = new XMLSerializer();
 
+        let chapter = new OrsChapter(this.chapter);
+        //resp = await client.send(req);
+        let doc = await chapter.load(resp);
+
+        if (!chapter.formatted) {
+            chapter.parse();
+            chapter.injectAnchors();
+        }
+
+        let startId = "section-" + parseInt(this.section);
+        let endId = chapter.getNextSectionId(startId);
+        console.log(endId);
+        let cloned = chapter.cloneFromIds(startId, endId);
+        let html = serializer.serializeToString(cloned);
+
+    }
     static queryBySection(chapter, section = null) {
         // built-ins
 
         let url = ORS_ENDPOINT;
         url = new Url(url);
         url.buildQuery("chapter", chapter);
-        url.buildQuery("section", section);
-        url.buildQuery("TEST");
+        //url.buildQuery("section", section);
 
         return url.toString();
     }
 
     render(data) {
         // This is how we pass an identifier to map().
-        return data.length == 0 ? "No Sections match those parameters" : data.map(this.renderSection);
+        return `<div>
+        <p>${data}</p>
+    </div>`;
     }
 
     renderSection(section, index) {
 
-        return `<div key=${index}>
-            <p>${section}</p>
-        </div>`;
+
+    }
+
+    async fetchOrs(params) {
+
     }
 
 
 }
+window.WebcOrs = WebcOrs;

@@ -4,4 +4,5 @@ node_modules/
 dev_modules/lib-mock
 #Ignore node-ors
 dev_modules/node-ors
-
+#Ignore lib-http
+dev_modules/lib-http

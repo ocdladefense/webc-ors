@@ -6,3 +6,5 @@ dev_modules/lib-mock
 dev_modules/node-ors
 #Ignore lib-http
 dev_modules/lib-http
+#Ignore dist
+dist/

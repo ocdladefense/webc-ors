@@ -4,7 +4,8 @@
   "description": "Custom web component to display Google Calendar events.",
   "browser": "src/WebcEvents.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel src -d dist"
   },
   "repository": {
     "type": "git",
@@ -17,9 +18,18 @@
   },
   "homepage": "https://github.com/ocdladefense/webc-events#readme",
   "dependencies": {
-    "@ocdladefense/lib-http": "file:./dev_modules/lib-http",
+    "@ocdladefense/lib-http": "https://github.com/ocdladefense/node-lib-http",
     "@ocdladefense/lib-polyfill": "https://github.com/ocdladefense/node-lib-polyfill",
-    "@ocdladefense/lib-mock": "file:./dev_modules/lib-mock",
+    "@ocdladefense/lib-mock": "https://github.com/ocdladefense/node-lib-mock",
     "@ocdladefense/ors": "file:./dev_modules/node-ors"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.18.10",
+    "@babel/core": "^7.18.13",
+    "@babel/preset-env": "^7.18.10",
+    "@babel/preset-react": "^7.14.5",
+    "babel-loader": "^8.2.2",
+    "babel-plugin-root-import": "^6.6.0",
+    "jsdoc": "^4.0.2"
   }
 }

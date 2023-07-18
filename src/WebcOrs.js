@@ -1,8 +1,7 @@
-import { HttpClient } from "../node_modules/@ocdladefense/lib-http/HttpClient.js";
-import { Url } from "../node_modules/@ocdladefense/lib-http/Url.js";
-import { OrsChapter } from "../dev_modules/node-ors/dist/chapter.js";
-import { OrsApiMock } from "../dev_modules/lib-mock/ORSApiMock.js";
-import { HttpCache } from "../node_modules/@ocdladefense/lib-http/HttpCache.js";
+import { HttpClient } from "~/node_modules/@ocdladefense/lib-http/HttpClient.js";
+import { Url } from "~/node_modules/@ocdladefense/lib-http/Url.js";
+import { OrsChapter } from "~/node_modules/@ocdladefense/ors/dist/chapter.js";
+import { OrsApiMock } from "~/node_modules/@ocdladefense/lib-mock/ORSApiMock.js";
 export { WebcOrs };
 
 // Pretending what the current environment looks like for this machine/application.
@@ -53,17 +52,19 @@ class WebcOrs extends HTMLElement {
         let resp = await client.send(req);
 
 
+
+
         //wasn't working like this so went back to old way temporarily 
         //await client.send(req)
         if (resp.bodyUsed) {
             throw new Error("Go learn about body Used");
         }
-        let html = await resp.text();
+        let html = await this.getSection(resp);
 
         this.list.innerHTML = this.render(html);
 
     }
-    async foobar() {
+    async getSection(resp) {
         const serializer = new XMLSerializer();
 
         let chapter = new OrsChapter(this.chapter);
@@ -80,7 +81,7 @@ class WebcOrs extends HTMLElement {
         console.log(endId);
         let cloned = chapter.cloneFromIds(startId, endId);
         let html = serializer.serializeToString(cloned);
-
+        return html;
     }
     static queryBySection(chapter, section = null) {
         // built-ins

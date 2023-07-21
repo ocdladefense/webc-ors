@@ -20,7 +20,7 @@
   "dependencies": {
     "@ocdladefense/lib-http": "file:./dev_modules/lib-http",
     "@ocdladefense/lib-polyfill": "https://github.com/ocdladefense/node-lib-polyfill",
-    "@ocdladefense/lib-mock": "https://github.com/ocdladefense/node-lib-mock",
+    "@ocdladefense/lib-mock": "file:./dev_modules/lib-mock",
     "@ocdladefense/ors": "file:./dev_modules/node-ors"
   },
   "devDependencies": {

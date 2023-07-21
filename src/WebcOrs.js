@@ -33,7 +33,7 @@ class WebcOrs extends HTMLElement {
 
         this.shadowRoot.append(list);
 
-        const myHeaders = new Headers({ 'Content-Type': 'text/html' });
+        const myHeaders = new Headers({ 'Accept': 'text/html' });
         //myHeaders.append("Content-Type", "text/html")
         const reqInIt = {
             headers: myHeaders
@@ -41,7 +41,7 @@ class WebcOrs extends HTMLElement {
 
         const config = {};
         const client = new HttpClient(config);
-        //client.toggleTest();
+        client.toggleTest();
         let url = WebcOrs.OrsChapterQuery(this.chapter);
         HttpClient.register("appdev.ocdla.org", new OrsApiMock());
 
@@ -50,13 +50,9 @@ class WebcOrs extends HTMLElement {
 
         let resp = await client.send(req);
         let html;
-        if (client.getLiveMode()) {
-            html = await this.getSection(resp);
-        }
-        else {
-            resp = await client.send(mockReq);
-            html = await resp.text();
-        }
+
+        html = await this.getSection(resp);
+
 
 
         this.list.innerHTML = this.render(html);

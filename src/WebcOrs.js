@@ -1,6 +1,6 @@
 import { HttpClient } from "~/node_modules/@ocdladefense/lib-http/HttpClient.js";
 import { Url } from "~/node_modules/@ocdladefense/lib-http/Url.js";
-import { OrsChapter } from "~/node_modules/@ocdladefense/ors/dist/chapter.js";
+import { OrsChapter } from "~/node_modules/@ocdladefense/ors/dist/OrsChapter.js";
 import { OrsApiMock } from "~/node_modules/@ocdladefense/lib-mock/OrsApiMock.js";
 export { WebcOrs };
 
@@ -33,17 +33,29 @@ class WebcOrs extends HTMLElement {
 
         this.shadowRoot.append(list);
 
+        const myHeaders = new Headers({ 'Content-Type': 'text/html' });
+        //myHeaders.append("Content-Type", "text/html")
+        const reqInIt = {
+            headers: myHeaders
+        };
+
         const config = {};
         const client = new HttpClient(config);
-
+        //client.toggleTest();
         let url = WebcOrs.OrsChapterQuery(this.chapter);
         HttpClient.register("appdev.ocdla.org", new OrsApiMock());
 
-        const req = new Request(url);
-        
-        let resp = await client.send(req);
+        const req = new Request(url, reqInIt);
 
-        let html = await this.getSection(resp);
+        let resp = await client.send(req);
+        let html;
+        if (client.getLiveMode()) {
+            html = await this.getSection(resp);
+        }
+        else {
+            html = await resp.text();
+        }
+
 
         this.list.innerHTML = this.render(html);
     }
@@ -63,7 +75,7 @@ class WebcOrs extends HTMLElement {
 
         let startId = "section-" + parseInt(this.section);
         let endId = chapter.getNextSectionId(startId);
-        console.log(endId);
+        //console.log(endId);
         let cloned = chapter.cloneFromIds(startId, endId);
         let html = serializer.serializeToString(cloned);
 
@@ -72,10 +84,10 @@ class WebcOrs extends HTMLElement {
 
 
     static OrsChapterQuery(chapter) {
-        
+
         let url = new Url(ORS_ENDPOINT);
         url.buildQuery("chapter", chapter);
-        
+
         return url.toString();
     }
 

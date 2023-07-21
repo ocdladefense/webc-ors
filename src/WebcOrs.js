@@ -45,7 +45,8 @@ class WebcOrs extends HTMLElement {
         let url = WebcOrs.OrsChapterQuery(this.chapter);
         HttpClient.register("appdev.ocdla.org", new OrsApiMock());
 
-        const req = new Request(url, reqInIt);
+        const req = new Request(url);
+        const mockReq = new Request(url, reqInIt)
 
         let resp = await client.send(req);
         let html;
@@ -53,6 +54,7 @@ class WebcOrs extends HTMLElement {
             html = await this.getSection(resp);
         }
         else {
+            resp = await client.send(mockReq);
             html = await resp.text();
         }
 

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html><head>
+    <meta http-equiv="content-type" content="text/html; charset=windows-1252">
+    <script src="parse_files/jquery.min.js">
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link href="parse_files/css2.css" rel="stylesheet">
+ 
+
+
+</head>
+
+<body tab-index="-1">
+
+    <div class="WordSection1">
+    <p class="MsoNormal" style="margin-bottom:0in;line-height:normal;text-autospace:
+    none"><b><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;,serif"> 813.660
+                Service center and manufacturer’s representative certification; fees; rules.</span></b><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;,serif"> (1) A service
+            center or manufacturer’s representative may not operate a service center in
+            Oregon unless both the service center and the manufacturer’s representative
+            obtain a certificate from the Department of State Police.</span></p>
+    
+    <p class="MsoNormal" style="margin-bottom:0in;line-height:normal;text-autospace:
+    none"><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;,serif"> (2)
+            A service center and a manufacturer’s representative may apply to the department
+            for a certificate under this section. The application shall be in such form as
+            may be specified by the department.</span></p>
+    
+    <p class="MsoNormal" style="margin-bottom:0in;line-height:normal;text-autospace:
+    none"><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;,serif"> (3)
+            The department may issue a certificate to a manufacturer’s representative if
+            the applicant:</span></p>
+    
+    <p class="MsoNormal" style="margin-bottom:0in;line-height:normal;text-autospace:
+    none"><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;,serif"> (a)
+            Meets all of the requirements established by this section and the rules adopted
+            by the department;</span></p>
+    
+    <p class="MsoNormal" style="margin-bottom:0in;line-height:normal;text-autospace:
+    none"><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;,serif"> (b)
+            Agrees to provide testimony relating to any aspect of the installation,
+            service, monitoring, maintenance, calibration, use, removal or performance of
+            the ignition interlock device at any criminal proceeding or administrative
+            hearing;</span></p>
+    
+    <p class="MsoNormal" style="margin-bottom:0in;line-height:normal;text-autospace:
+    none"><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;,serif"> (c)
+            Provides service centers statewide, as defined by the department by rule;</span></p>
+    
+    <p class="MsoNormal" style="margin-bottom:0in;line-height:normal;text-autospace:
+    none"><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;,serif"> (d)
+            Provides 24-hour telephone assistance to customers; and</span></p>
+    
+    <p class="MsoNormal" style="margin-bottom:0in;line-height:normal;text-autospace:
+    none"><span style="font-size:12.0pt;font-family:&quot;Times New Roman&quot;,serif"> (e)
+            Pays all required fees.</span></p>`;
+
+    </div>
+
+
+
+<script>
+
+    let html = document.querySelector(".WordSection1").innerHTML;
+
+    const parser = new DOMParser();
+
+    // Tell parse the HTML string into a document.
+    const doc = parser.parseFromString(html, "text/html");
+
+    const subs = doc.querySelectorAll("p");
+
+    let sectionNumber = "660";
+    const section = document.createElement("div");
+    section.setAttribute("id", sectionNumber);
+
+    let currentSubsection = ""
+
+    // splitting section stuff:
+    // ["1"] encounter numbered section
+    // ["a", "1"] encounter lettered section
+    // ["b", "1"] next lettered section found
+    // ["A", "b", "1"] found another section 1..n
+    // ["a", "3"]
+    // ["4"]
+
+    for(var i = 0; subs.length; i++) {
+        let p = subs[i];
+        let header = p.querySelector("b");
+
+        if (header) {
+                p = header.nextElementSibling;
+        }
+
+        let text = p.innerText.trim().replaceAll('\n', ' '); // Get rid of whitespace at the beginning and the end of the string.
+
+        console.log(text);
+        
+
+        // Then ?
+        let subRe = /^\(([1-9a-zA-Z]+)\)(.*)/;
+        // Which methods are we gonna call and pass our regular expression to?
+        // What kind of structure are we building?
+
+        let specText = text.match(subRe);
+
+        let subId = specText[1];
+
+        
+
+        console.log(subId);
+
+        let sub = document.createElement("div");
+        sub.setAttribute("id", sectionNumber +"-"+subId);
+
+        section.appendChild(sub);
+        
+    }
+
+
+
+
+</script></body></html>

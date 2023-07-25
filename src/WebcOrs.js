@@ -66,16 +66,9 @@ class WebcOrs extends HTMLElement {
         let chapter = new OrsChapter(this.chapter);
         let doc = await chapter.load(resp);
 
-        if (!chapter.formatted) {
-            chapter.parse();
-            chapter.injectAnchors();
-        }
 
-        let startId = "section-" + parseInt(this.section);
-        let endId = chapter.getNextSectionId(startId);
-        //console.log(endId);
-        let cloned = chapter.cloneFromIds(startId, endId);
-        let html = serializer.serializeToString(cloned);
+
+
 
         return html;
     }

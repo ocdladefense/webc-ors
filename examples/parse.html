@@ -7,7 +7,31 @@
     <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
     <link href="parse_files/css2.css" rel="stylesheet">
  
+    <style>
+            .level-0 {
+                    margin-left: 0px;
+                    margin-top: 5px;
+                    margin-bottom: 5px;
+            }
 
+            .level-1 {
+                    margin-left: 15px;
+                    margin-top: 5px;
+                    margin-bottom: 5px;
+            }   
+
+            .level-2 {
+                    margin-left: 30px;
+                    margin-top: 5px;
+                    margin-bottom: 5px;
+            }
+
+            .level-3 {
+                    margin-left: 45px;
+                    margin-top: 5px;
+                    margin-bottom: 5px;
+            }
+    </style>
 
 </head>
 
@@ -405,6 +429,9 @@ c.237 §27; 2019 c.475 §2]</span></p>
 
     let html = document.querySelector(".WordSection1").innerHTML;
 
+    const gSubRe = /^\(([0-9a-zA-Z]+)\)(.*)/gm;
+    const subRe = /^\(([0-9a-zA-Z]+)\)(.*)/;
+
     const parser = new DOMParser();
 
     // Tell parse the HTML string into a document.
@@ -420,6 +447,9 @@ c.237 §27; 2019 c.475 §2]</span></p>
     let lookingFor = ["2"];
     let stackNum = 0;
     let subsectionColText = "";
+    // <webc-ors chapter="813" section="130"></webc-ors>
+
+    init();
 
     // splitting section stuff:
     // ["1"] encounter numbered section
@@ -451,7 +481,6 @@ c.237 §27; 2019 c.475 §2]</span></p>
         
 
         // Then ?
-        let subRe = /^\(([0-9a-zA-Z]+)\)(.*)/;
         // Which methods are we gonna call and pass our regular expression to?
         // What kind of structure are we building?
 
@@ -482,6 +511,7 @@ c.237 §27; 2019 c.475 §2]</span></p>
                 stackNum++;
                 console.log(subsectionStack);
 
+                // this is because we need to get the immediate element at the top of the search
                 if (subsectionStack.join('-') == lookingFor.join('-')) {
                         let sub = document.createElement("div");
                         sub.setAttribute("id", sectionNumber +"-"+subsectionStack.join('-'));
@@ -505,7 +535,7 @@ c.237 §27; 2019 c.475 §2]</span></p>
 
                         section.appendChild(sub)
                 } else {
-                        document.getElementsByClassName('WordSection1')[0].innerHTML = section.innerHTML;
+                        // document.getElementsByClassName('WordSection1')[0].innerHTML = section.innerHTML;
                         break;
                 }
         }
@@ -534,6 +564,119 @@ c.237 §27; 2019 c.475 §2]</span></p>
 
         // console.log(subId);
         
+    }
+
+    function init() {
+        let matches = retrievePTags();
+
+        const wordDoc = document.getElementsByClassName("WordSection1")[0].innerText;
+
+        let sectionNumber = "130";
+        const section = document.createElement("div");
+        section.setAttribute("id", sectionNumber);
+
+        iterateMatches(matches, 0, section, sectionNumber);
+
+        document.getElementsByClassName('WordSection1')[0].appendChild(section);
+    }
+
+    function retrievePTags() {
+        // const subs = doc.querySelectorAll("p");
+        const wordDoc = document.getElementsByClassName("WordSection1")[0].innerText;
+
+        let matches = wordDoc.match(gSubRe);
+
+        return matches;
+    }
+
+    function iterateMatches(matches, currentIndex, parent, sectionNumber, lastLevel = '0') {
+        
+        if (currentIndex >= matches.length) {
+                return;
+        }
+
+        //for (var i = currentIndex; i < matches.length; i++) {
+        // let match = fun(matches, currentIndex);
+        let match = matches[currentIndex].match(subRe);
+        let nextMatch = matches[currentIndex + 1];
+        // 0 should be full text?
+        // 1 is id
+        // 2 is text without subsection
+        console.log(match[1]); // should be id again
+        let id = match[1];
+        let text = match[2];
+
+        let level = findLevel(id, nextMatch);
+        let willBeChild = level > lastLevel;
+
+        let element = buildElement(id, text, level, sectionNumber);
+
+        if (level == lastLevel) {
+                parent.appendChild(element);
+
+        } else if (level > lastLevel) {
+                parent = parent.lastChild;
+
+                parent.appendChild(element);
+
+        } else if (level < lastLevel) {
+                if ((lastLevel - level) == 1) {
+                        parent = parent.parentNode;
+                } else if ((lastLevel - level) == 2) {
+                        parent = parent.parentNode.parentNode;
+                } else if ((lastLevel - level) == 3) {
+                        parent = parent.parentNode.parentNode.parentNode;
+                }
+
+                parent.appendChild(element);
+        }
+
+
+        // identify subsections
+        // build subsection grouping elements
+
+        iterateMatches(matches, ++currentIndex, parent, sectionNumber, level);
+        
+        //}
+    }
+
+    function buildElement(id, text, level, sectionNumber) {
+        let sub = document.createElement("div");
+        sub.setAttribute("id", sectionNumber +"-"+ id);
+        sub.setAttribute("class", "level-" + level);
+
+        let span = document.createElement("span");
+        span.setAttribute("class", "subsection");
+        span.innerText = '(' + id + ')';
+
+        let theText = document.createTextNode(text);
+
+        sub.appendChild(span);
+        sub.appendChild(theText);
+
+        return sub;
+    }
+
+    function findLevel(text, nextMatch) {
+        let subNumRe = /^[0-9]+/;
+        let subUpperRe = /^[A-Z]+/;
+        let subRe = /^\(([0-9a-zA-Z]+)\)(.*)/;
+
+        let nextId;
+
+        if (nextMatch != null) {
+                nextId = nextMatch.match(subRe)[1];
+        }
+
+        if (text.match(subNumRe)) {
+                return '0';
+        } else if (!isRomanNumeral(text, nextId) && !text.match(subUpperRe)) {
+                return '1';
+        } else if (text.match(subUpperRe)) {
+                return '2';
+        } else if (isRomanNumeral(text, nextId)) {
+                return '3';
+        }
     }
 
     // if it returns true - we are good, we can continue to the next subsection

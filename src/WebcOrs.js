@@ -41,7 +41,7 @@ class WebcOrs extends HTMLElement {
 
         const config = {};
         const client = new HttpClient(config);
-        client.toggleTest();
+        // client.toggleTest();
         let url = WebcOrs.OrsChapterQuery(this.chapter);
         HttpClient.register("appdev.ocdla.org", new OrsApiMock());
 
@@ -65,9 +65,11 @@ class WebcOrs extends HTMLElement {
 
         let chapter = new OrsChapter(this.chapter);
         let doc = await chapter.load(resp);
+        chapter.init();
 
-
-
+        let section = chapter.getSection(parseInt(this.section));
+        // console.log(section);
+        let html = serializer.serializeToString(section);
 
 
         return html;

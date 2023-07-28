@@ -1,6 +1,6 @@
 import { HttpClient } from "~/node_modules/@ocdladefense/lib-http/HttpClient.js";
 import { Url } from "~/node_modules/@ocdladefense/lib-http/Url.js";
-import { OrsChapter } from "~/node_modules/@ocdladefense/ors/dist/OrsChapter.js";
+import { OrsChapter } from "~/node_modules/@ocdladefense/ors/src/OrsChapter.js";
 import { OrsApiMock } from "~/node_modules/@ocdladefense/lib-mock/OrsApiMock.js";
 export { WebcOrs };
 
@@ -12,15 +12,24 @@ const ORS_ENDPOINT = "https://appdev.ocdla.org/books-online/index.php";
 
 class WebcOrs extends HTMLElement {
 
+    references;
+
     chapter;
 
     section = null;
 
-    constructor(chapter = null, section = null) {
-        super();
+    subSection = null;
 
-        this.chapter = chapter || this.getAttribute("chapter");
-        this.section = section || this.getAttribute("section");
+    constructor() {
+        super();
+        let reference = this.getAttribute("reference");
+        //this.references = reference.split(",");
+        let splitReference = reference.match(/([0-9a-zA-Z]+)/g);
+        this.chapter = splitReference.shift();
+        this.section = splitReference.shift();
+        this.subSection = splitReference.join("-");
+
+        console.log(this.chapter, this.section, this.subSection);
     }
 
     // Called each time the element is appended to the window/another element
@@ -63,11 +72,13 @@ class WebcOrs extends HTMLElement {
     async getSection(resp) {
         const serializer = new XMLSerializer();
 
+
+
         let chapter = new OrsChapter(this.chapter);
         let doc = await chapter.load(resp);
         chapter.init();
 
-        let section = chapter.getSection(parseInt(this.section));
+        let section = chapter.getSection(parseInt(this.section) + "-" + this.subSection);
         // console.log(section);
         let html = serializer.serializeToString(section);
 

@@ -12,7 +12,7 @@ const ORS_ENDPOINT = "https://appdev.ocdla.org/books-online/index.php";
 
 class WebcOrs extends HTMLElement {
 
-    references;
+    reference;
 
     chapter;
 
@@ -22,9 +22,9 @@ class WebcOrs extends HTMLElement {
 
     constructor() {
         super();
-        let reference = this.getAttribute("reference");
+        this.reference = this.getAttribute("reference");
         //this.references = reference.split(",");
-        let splitReference = reference.match(/([0-9a-zA-Z]+)/g);
+        let splitReference = this.reference.match(/([0-9a-zA-Z]+)/g);
         this.chapter = splitReference.shift();
         this.section = splitReference.shift();
         this.subSection = splitReference.join("-");
@@ -37,10 +37,41 @@ class WebcOrs extends HTMLElement {
         const shadow = this.attachShadow({ mode: "open" });
 
         const list = document.createElement("div");
+        list.setAttribute("class", "statute");
+        const style = document.createElement("style");
+        style.innerText = `
+        .statute {
+            font-family: monospace;
+            border-left: 3px solid blue;
+            margin-left: 50px;
+        }
+        .level-0 {
+            margin-left: 0px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .level-1 {
+            margin-left: 15px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .level-2 {
+            margin-left: 30px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .level-3 {
+            margin-left: 45px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }`;
 
         this.list = list;
 
-        this.shadowRoot.append(list);
+        this.shadowRoot.append(style, list);
 
         const myHeaders = new Headers({ 'Accept': 'text/html' });
         //myHeaders.append("Content-Type", "text/html")
@@ -64,7 +95,7 @@ class WebcOrs extends HTMLElement {
 
 
 
-        this.list.innerHTML = this.render(html);
+        this.list.innerHTML = `<span>${this.reference}</span>` + this.render(html);
     }
 
 

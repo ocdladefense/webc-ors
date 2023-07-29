@@ -1,7 +1,7 @@
-import { HttpClient } from "~/node_modules/@ocdladefense/lib-http/HttpClient.js";
-import { Url } from "~/node_modules/@ocdladefense/lib-http/Url.js";
-import { OrsChapter } from "~/node_modules/@ocdladefense/ors/src/OrsChapter.js";
-import { OrsApiMock } from "~/node_modules/@ocdladefense/lib-mock/OrsApiMock.js";
+import { HttpClient } from "../../lib-http/HttpClient.js";
+import { Url } from "../../lib-http/Url.js";
+import { OrsChapter } from "../../ors/dist/OrsChapter.js";
+import { OrsApiMock } from "../../lib-mock/OrsApiMock.js";
 export { WebcOrs };
 
 
@@ -14,22 +14,30 @@ class WebcOrs extends HTMLElement {
 
     reference;
 
-    chapter;
+    chapterNumber;
 
-    section = null;
+    sectionNumber = null;
 
-    subSection = null;
+    subSectionNumber = null;
+
+    chapter = null;
 
     constructor() {
         super();
         this.reference = this.getAttribute("reference");
+        this.chapterNumber = this.getAttribute("chapter");
+        this.sectionNumber = this.getAttribute("section");
         //this.references = reference.split(",");
-        let splitReference = this.reference.match(/([0-9a-zA-Z]+)/g);
-        this.chapter = splitReference.shift();
-        this.section = splitReference.shift();
-        this.subSection = splitReference.join("-");
+        if(null != this.reference) {
+            let splitReference = this.reference.match(/([0-9a-zA-Z]+)/g);
+            this.chapterNumber = splitReference.shift();
+            this.sectionNumber = splitReference.shift();
+            this.subSection = splitReference.join("-");
+        } else {
+            this.reference = [this.chapterNumber,this.sectionNumber].join(".");
+        }
 
-        console.log(this.chapter, this.section, this.subSection);
+        console.log(this.chapterNumber, this.sectionNumber, this.subSection);
     }
 
     // Called each time the element is appended to the window/another element
@@ -44,6 +52,8 @@ class WebcOrs extends HTMLElement {
             font-family: monospace;
             border-left: 3px solid blue;
             margin-left: 50px;
+            max-width: 50%;
+            padding-left: 20px;
         }
         .level-0 {
             margin-left: 0px;
@@ -67,54 +77,61 @@ class WebcOrs extends HTMLElement {
             margin-left: 45px;
             margin-top: 5px;
             margin-bottom: 5px;
-        }`;
+        }
+        .section-label:before {
+            content: "ORS ";
+        }
+        .section-label {
+            padding: 5px;
+            font-size:larger;
+            font-weight: bold;
+        }
+        `;
 
         this.list = list;
 
         this.shadowRoot.append(style, list);
 
-        const myHeaders = new Headers({ 'Accept': 'text/html' });
-        //myHeaders.append("Content-Type", "text/html")
-        const reqInIt = {
-            headers: myHeaders
+        const headers = new Headers();
+        headers.append("Accept","text/html");
+        const reqInit = {
+            method: "GET",
+            headers: headers,
+            mode: "cors",
+            cache: "default"
         };
 
-        const config = {};
-        const client = new HttpClient(config);
+
+        // const config = {};
+        const client = new HttpClient();
         // client.toggleTest();
-        let url = WebcOrs.OrsChapterQuery(this.chapter);
+        let url = WebcOrs.OrsChapterQuery(this.chapterNumber);
         HttpClient.register("appdev.ocdla.org", new OrsApiMock());
 
+        this.chapter = new OrsChapter(this.chapterNumber);
+
+        // Make our http request and load the chapter from the Oregon Legislature website.
         const req = new Request(url);
-        const mockReq = new Request(url, reqInIt)
-
         let resp = await client.send(req);
-        let html;
+        await this.chapter.load(resp);
+        this.chapter.init();
 
-        html = await this.getSection(resp);
+        let id = this.subSection ? [this.sectionNumber, this.subSection].join("-") : parseInt(this.sectionNumber);
+        console.log(id);
+        let html = await this.getSection(id);
 
-
-
-        this.list.innerHTML = `<span>${this.reference}</span>` + this.render(html);
+        this.list.innerHTML = `<span class="section-label">${this.reference}</span>` + this.render(html);
     }
 
 
 
-    async getSection(resp) {
+    async getSection(id) {
         const serializer = new XMLSerializer();
 
+        let section = this.chapter.getSection(id);
+        console.log(section);
 
-
-        let chapter = new OrsChapter(this.chapter);
-        let doc = await chapter.load(resp);
-        chapter.init();
-
-        let section = chapter.getSection(parseInt(this.section) + "-" + this.subSection);
-        // console.log(section);
-        let html = serializer.serializeToString(section);
-
-
-        return html;
+        return serializer.serializeToString(section);
     }
 
 

@@ -25,53 +25,29 @@ class WebcOrs extends HTMLElement {
 
     chapter = null;
 
+
+
+
     constructor() {
         super();
         this.references = this.getAttribute("references") && this.getAttribute("references").split(",").map((ref) => ref.trim());
         this.chapterNumber = this.getAttribute("chapter");
         this.sectionNumber = this.getAttribute("section");
         
-        let chapters, sections, subsections;
+        console.log(this.references);
         if(null != this.references) {
-            [chapters,sections,subsections] = WebcOrs.parseReferences(this.references);
-            this.chapterNumber = chapters[0];
-            this.sectionNumber = sections[0];
-            this.subsections = subsections;
+            [this.chapterNumber,this.sectionNumber] = this.references[0].split(/\.|\(/);
+            console.log(this.chapterNumber, this.sectionNumber);
         } else {
             this.references = [[this.chapterNumber,this.sectionNumber].join(".")];
         }
 
-        console.log(this.chapterNumber, this.sectionNumber, this.subsections);
+        console.log(this.chapterNumber, this.sectionNumber);
     }
 
 
 
-    static parseReferences(references) {
-        
-        let chapters = [];
-        let sections = [];
-        let subsections = [];
-
-        for (let i = 0; i < references.length; i++) {
-            let chapter, section, subsection;
-            let split = references[i].match(/([0-9a-zA-Z]+)/g);
-            
-            
-            chapter = split.shift();
-            section = split.shift();
-
-            // Parse a range of subsections.
-            // Parse a comma-delimitted series of subsections.
-            //this.references = reference.split(",");
-            subsection =  split.join("-");
-            chapters.push(chapter);
-            sections.push(section);
-            subsections.push(subsection);
-        }
-
-
-        return [chapters,sections,subsections];
-    }
+    
 
 
     // Called each time the element is appended to the window/another element.
@@ -112,13 +88,15 @@ class WebcOrs extends HTMLElement {
         await this.chapter.load(resp);
         this.chapter.init();
 
-        let ids = WebcOrs.buildSelectors(this.chapterNumber, this.sectionNumber, this.subsections);
 
-        console.log(ids);
+        console.log(this.references);
+        let sections = this.chapter.querySelectorAll(this.references);
         
+        // console.log(this.references);
+        // this.list.innerHTML = "foobar";
+        // return;
 
-        let sections = this.chapter.getSections(ids);
-   
+
         console.log(sections);
         let html = (!sections || sections.length == 0) ? "Reference not found!" : [...sections].map((section) => serializer.serializeToString(section));
         console.log(html);
@@ -127,14 +105,10 @@ class WebcOrs extends HTMLElement {
         for(var i = 0; i<html.length; i++) {
             this.list.innerHTML += `<span class="section-label">${this.references[i]}</span>` + this.render(html[i]);
         }
-      
-    }
+    }  
 
 
-    static buildSelectors(chapter,section,subsections) {
 
-        return subsections ? subsections.map((sub) => [parseInt(section),sub].join("-")) : [parseInt(section)];
-    }
 
 
 

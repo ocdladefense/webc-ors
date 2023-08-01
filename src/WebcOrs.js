@@ -1,6 +1,7 @@
 import { HttpClient } from "../../lib-http/HttpClient.js";
 import { Url } from "../../lib-http/Url.js";
-import { OrsChapter } from "../../ors/dist/OrsChapter.js";
+import { OrsChapter } from "../../ors/src/OrsChapter.js";
+import { OrsParser } from "../../ors/src/OrsParser.js";
 import { OrsApiMock } from "../../lib-mock/OrsApiMock.js";
 export { WebcOrs };
 
@@ -33,21 +34,21 @@ class WebcOrs extends HTMLElement {
         this.references = this.getAttribute("references") && this.getAttribute("references").split(",").map((ref) => ref.trim());
         this.chapterNumber = this.getAttribute("chapter");
         this.sectionNumber = this.getAttribute("section");
-        
-        console.log(this.references);
-        if(null != this.references) {
-            [this.chapterNumber,this.sectionNumber] = this.references[0].split(/\.|\(/);
-            console.log(this.chapterNumber, this.sectionNumber);
+
+        // console.log(this.references);
+        if (null != this.references) {
+            [this.chapterNumber, this.sectionNumber] = this.references[0].split(/\.|\(/);
+            // console.log(this.chapterNumber, this.sectionNumber);
         } else {
-            this.references = [[this.chapterNumber,this.sectionNumber].join(".")];
+            this.references = [[this.chapterNumber, this.sectionNumber].join(".")];
         }
 
-        console.log(this.chapterNumber, this.sectionNumber);
+        // console.log(this.chapterNumber, this.sectionNumber);
     }
 
 
 
-    
+
 
 
     // Called each time the element is appended to the window/another element.
@@ -64,7 +65,7 @@ class WebcOrs extends HTMLElement {
         this.shadowRoot.append(style, list);
 
         const headers = new Headers();
-        headers.append("Accept","text/html");
+        headers.append("Accept", "text/html");
         const reqInit = {
             method: "GET",
             headers: headers,
@@ -74,38 +75,31 @@ class WebcOrs extends HTMLElement {
 
         const serializer = new XMLSerializer();
 
-        // const config = {};
+   
         const client = new HttpClient();
         // client.toggleTest();
         let url = WebcOrs.OrsChapterQuery(this.chapterNumber);
         HttpClient.register("appdev.ocdla.org", new OrsApiMock());
 
-        this.chapter = new OrsChapter(this.chapterNumber);
+        
 
         // Make our http request and load the chapter from the Oregon Legislature website.
         const req = new Request(url);
         let resp = await client.send(req);
-        await this.chapter.load(resp);
-        this.chapter.init();
 
-
+        this.chapter = await OrsChapter.fromCache(this.chapterNumber, resp);
+        
         console.log(this.references);
         let sections = this.chapter.querySelectorAll(this.references);
-        
-        // console.log(this.references);
-        // this.list.innerHTML = "foobar";
-        // return;
-
-
-        console.log(sections);
-        let html = (!sections || sections.length == 0) ? "Reference not found!" : [...sections].map((section) => serializer.serializeToString(section));
-        console.log(html);
+        let htmlArray = (!sections || sections.length == 0) ? "Reference not found!" : [...sections].map((section) => serializer.serializeToString(section));
+        console.log(htmlArray);
 
         this.list.innerHTML = "";
-        for(var i = 0; i<html.length; i++) {
-            this.list.innerHTML += `<span class="section-label">${this.references[i]}</span>` + this.render(html[i]);
+        for (var i = 0; i < htmlArray.length; i++) {
+            let html = OrsParser.replaceAll(htmlArray[i]);
+            this.list.innerHTML += `<span class="section-label">${this.references[i]}</span>` + this.render(html);
         }
-    }  
+    }
 
 
 
@@ -130,6 +124,10 @@ class WebcOrs extends HTMLElement {
 
     static getCss() {
         return `
+        .subsection {
+            display:inline-block;
+            margin-top: 8px;
+        }
         .statute {
             font-family: monospace;
             border-left: 3px solid blue;

@@ -21,7 +21,7 @@
     "@ocdladefense/lib-http": "https://github.com/ocdladefense/node-lib-http",
     "@ocdladefense/lib-polyfill": "https://github.com/ocdladefense/node-lib-polyfill",
     "@ocdladefense/lib-mock": "https://github.com/ocdladefense/node-lib-mock",
-    "@ocdladefense/ors": "https://github.com/ocdladefense/node-ors"
+    "@ocdladefense/ors": "file:../dev_modules/node-ors"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.10",

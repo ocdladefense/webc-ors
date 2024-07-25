@@ -31,7 +31,8 @@ class WebcOrs extends HTMLElement {
 
     constructor() {
         super();
-        this.references = this.getAttribute("references") && this.getAttribute("references").split(",").map((ref) => ref.trim());
+        let refs = this.getAttribute("references") && this.getAttribute("references").split(" ")[1];
+        this.references = refs.split(",").map((ref) => ref.trim());
         this.chapterNumber = this.getAttribute("chapter");
         this.sectionNumber = this.getAttribute("section");
 
@@ -60,49 +61,73 @@ class WebcOrs extends HTMLElement {
         const style = document.createElement("style");
         style.innerText = WebcOrs.getCss();
 
-        this.list = list;
+      
+
+        
+
+
+        const serializer = new XMLSerializer();
+
+   
+
+        
+        this.chapter = await WebcOrs.loadChapter(this.chapterNumber);
+        
+
+        console.log(this.references);
+        
+
+        let refHtml = [];
+        let error = null;
+
+        try {
+            let sections = this.chapter.querySelectorAll(this.references);
+            if(null == sections) {
+                throw new Error("Could not retrieve section for "+this.references.join("\n"));
+            }
+            let htmlArray = (!sections || sections.length == 0) ? "Reference not found!" : [...sections].map((section) => serializer.serializeToString(section));
+
+            console.log(htmlArray);
+
+            for (var i = 0; i < htmlArray.length; i++) {
+                let html = OrsParser.replaceAll(htmlArray[i]);
+                refHtml.push(`<span class="section-label">${this.references[i]}</span>` + this.render(html));
+            }
+        } catch(e) {
+            error = e.message;
+        }
+        
+        console.log(this);
+        list.innerHTML = null != error ? error : refHtml.join("\n");
 
         this.shadowRoot.append(style, list);
+    }
+
+
+
+    static async loadChapter(chapterNumber) {
+
+        HttpClient.register("appdev.ocdla.org", new OrsApiMock());
 
         const headers = new Headers();
         headers.append("Accept", "text/html");
         const reqInit = {
             method: "GET",
-            headers: headers,
-            mode: "cors",
-            cache: "default"
+            headers: headers
+            // mode: "cors",
+            // cache: "default"
         };
 
-        const serializer = new XMLSerializer();
-
-   
         const client = new HttpClient();
         // client.toggleTest();
-        let url = WebcOrs.OrsChapterQuery(this.chapterNumber);
-        HttpClient.register("appdev.ocdla.org", new OrsApiMock());
-
-        
+        let url = WebcOrs.OrsChapterQuery(chapterNumber);
 
         // Make our http request and load the chapter from the Oregon Legislature website.
         const req = new Request(url);
         let resp = await client.send(req);
 
-        this.chapter = await OrsChapter.fromCache(this.chapterNumber, resp);
-        
-        console.log(this.references);
-        let sections = this.chapter.querySelectorAll(this.references);
-        let htmlArray = (!sections || sections.length == 0) ? "Reference not found!" : [...sections].map((section) => serializer.serializeToString(section));
-        console.log(htmlArray);
-
-        this.list.innerHTML = "";
-        for (var i = 0; i < htmlArray.length; i++) {
-            let html = OrsParser.replaceAll(htmlArray[i]);
-            this.list.innerHTML += `<span class="section-label">${this.references[i]}</span>` + this.render(html);
-        }
+        return await OrsChapter.fromCache(chapterNumber, resp);
     }
-
-
-
 
 
 

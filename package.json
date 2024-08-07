@@ -18,10 +18,8 @@
   },
   "homepage": "https://github.com/ocdladefense/webc-events#readme",
   "dependencies": {
-    "@ocdladefense/lib-http": "https://github.com/ocdladefense/node-lib-http",
-    "@ocdladefense/lib-polyfill": "https://github.com/ocdladefense/node-lib-polyfill",
-    "@ocdladefense/lib-mock": "https://github.com/ocdladefense/node-lib-mock",
-    "@ocdladefense/ors": "file:../node-ors"
+    "@ocdla/lib-http": "^2.0.0",
+    "@ocdladefense/ors": "^2.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.18.10",

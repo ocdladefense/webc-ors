@@ -1,9 +1,7 @@
-import { HttpClient } from "../../lib-http/HttpClient.js";
-import { Url } from "../../lib-http/Url.js";
+import HttpClient from "../../lib-http/HttpClient.js";
+import Url from "../../lib-http/Url.js";
 import { OrsChapter } from "../../ors/src/OrsChapter.js";
 import { OrsParser } from "../../ors/src/OrsParser.js";
-import { OrsApiMock } from "../../lib-mock/OrsApiMock.js";
-export { WebcOrs };
 
 
 
@@ -11,7 +9,7 @@ const ORS_ENDPOINT = "https://appdev.ocdla.org/books-online/index.php";
 
 
 
-class WebcOrs extends HTMLElement {
+export default class WebcOrs extends HTMLElement {
 
     references
 
@@ -107,7 +105,7 @@ class WebcOrs extends HTMLElement {
 
     static async loadChapter(chapterNumber) {
 
-        HttpClient.register("appdev.ocdla.org", new OrsApiMock());
+
 
         const headers = new Headers();
         headers.append("Accept", "text/html");

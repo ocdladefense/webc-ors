@@ -46,7 +46,24 @@ export default class WebcOrs extends HTMLElement {
     }
 
 
+    static async loadChapter(chapterNumber) {
 
+        const url = new Url("https://appdev.ocdla.org/books-online/index.php");
+        url.buildQuery("chapter", chapterNumber.toString());
+
+        const req = new Request(url.toString());
+        console.log(req);
+        const client = new HttpClient();
+        const resp = await client.send(req);
+        console.log(resp);
+        console.log("loading chapter");
+        const msword = OrsChapter.fromResponse(resp.clone());
+        msword.chapterNum = chapterNumber;
+
+        // console.log(msword);
+
+        return OrsChapter.toStructuredChapter(msword);
+    }
 
 
 
@@ -59,16 +76,8 @@ export default class WebcOrs extends HTMLElement {
         const style = document.createElement("style");
         style.innerText = WebcOrs.getCss();
 
-      
-
-        
-
-
         const serializer = new XMLSerializer();
 
-   
-
-        
         this.chapter = await WebcOrs.loadChapter(this.chapterNumber);
         
 
@@ -93,6 +102,7 @@ export default class WebcOrs extends HTMLElement {
             }
         } catch(e) {
             error = e.message;
+            console.error(e);
         }
         
         console.log(this);
@@ -102,40 +112,6 @@ export default class WebcOrs extends HTMLElement {
     }
 
 
-
-    static async loadChapter(chapterNumber) {
-
-
-
-        const headers = new Headers();
-        headers.append("Accept", "text/html");
-        const reqInit = {
-            method: "GET",
-            headers: headers
-            // mode: "cors",
-            // cache: "default"
-        };
-
-        const client = new HttpClient();
-        // client.toggleTest();
-        let url = WebcOrs.OrsChapterQuery(chapterNumber);
-
-        // Make our http request and load the chapter from the Oregon Legislature website.
-        const req = new Request(url);
-        let resp = await client.send(req);
-
-        return await OrsChapter.fromCache(chapterNumber, resp);
-    }
-
-
-
-    static OrsChapterQuery(chapter) {
-
-        let url = new Url(ORS_ENDPOINT);
-        url.buildQuery("chapter", chapter);
-
-        return url.toString();
-    }
 
 
 

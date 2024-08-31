@@ -22,25 +22,16 @@ export default class WebcOrs extends HTMLDivElement {
 
   chapter = null;
 
+  static cache = {};
+
   constructor() {
     super();
-    let refs =
-      this.getAttribute("references") &&
-      this.getAttribute("references").split(" ")[1];
+    let refs = this.getAttribute("ref") && this.getAttribute("ref").split(" ")[1];
     this.references = refs.split(",").map((ref) => ref.trim());
-    this.chapterNumber = "127"; //this.getAttribute("chapter");
-    this.sectionNumber = "45"; //this.getAttribute("section");
-
-    /*
-        // console.log(this.references);
-        if (null != this.references) {
-            [this.chapterNumber, this.sectionNumber] = this.references[0].split(/\.|\(/);
-            // console.log(this.chapterNumber, this.sectionNumber);
-        } else {
-            this.references = [[this.chapterNumber, this.sectionNumber].join(".")];
-        }
-        */
-    // console.log(this.chapterNumber, this.sectionNumber);
+    // This ensures we get a chapter and a section even if the ref attribute contains subsection elements
+    // of the form 138.001(1)(a).
+    [this.chapterNumber, this.sectionNumber] = this.references[0].split(/\.|\(/).map(str => parseInt(str));
+    this.references = [[this.chapterNumber, this.sectionNumber].join(".")];
   }
 
   // Called each time the element is appended to the window/another element.
@@ -52,20 +43,50 @@ export default class WebcOrs extends HTMLDivElement {
     let styles = document.createElement("style");
     styles.innerText = WebcOrs.getCss();
 
-    try {
-        nodes = await this.doSomething();
-    } catch (e) {
-        console.error(e);
-        nodes.push(document.createTextNode("An error occurred: " + e.message));
-    }
-    // this.shadowRoot.appendChild(styles);
+    let foo = WebcOrs.loadChapter(this.chapterNumber);
 
-    this.shadowRoot.append(...nodes);
+    foo.then(chapter => {
+      let sections = [chapter.getSection(this.sectionNumber)];
+      return sections;
+    })
+    .then(nodes => {
+      if (null == nodes) {
+        throw new Error("Could not retrieve section for " + [chapterNumber,sectionNumber].join("."));
+      }
+      let fragment = new DocumentFragment();
+      let copies = nodes.map(node => node.cloneNode(true));
+      fragment.append(...copies);
+      this.shadowRoot.appendChild(fragment);
+    })
+    .catch(e => {
+        console.error(e);
+        // nodes.push(document.createTextNode("An error occurred: " + e.message));
+    });
+
   }
 
 
 
-  async doSomething() {
+  static loadChapter(chapterNumber) {
+
+    // If the promise that will eventually resolve to this 
+    return WebcOrs.cache[chapterNumber.toString()] ||  (function(chapterNumber) {
+
+      const url = new Url("https://appdev.ocdla.org/books-online/index.php");
+      url.buildQuery("chapter", chapterNumber.toString());
+
+      const client = new HttpClient();
+      const req = new Request(url.toString());
+      const chapter = client.send(req).then( resp => OrsChapter.fromResponse(resp, chapterNumber) )
+        .then( chapter => {console.log(chapter.toString()); return chapter;});
+
+      WebcOrs.cache[chapterNumber.toString()] = chapter;
+      return WebcOrs.cache[chapterNumber.toString()];
+    })(chapterNumber);
+  }
+
+
+  buildNode(sections) {
     let refHtml = [];
     let error = null;
 
@@ -87,35 +108,14 @@ export default class WebcOrs extends HTMLDivElement {
     
 
 
-    let chapter = await WebcOrs.loadChapter(this.chapterNumber);
-    let selector = "#section-" + this.sectionNumber;
-
-    // Currently there is an issue because our source document has all kinds of nasty <html> tags in it.
-    let sections = [chapter.doc.querySelector(selector)];
-    
-    if (null == sections) {
-      throw new Error(
-        "Could not retrieve section for " + this.references.join("\n")
-      );
-    }
 
     
-    statute.prepend("I am appending some content here...");
-    return [label, statute];//statute.append(...sections)];
+    // statute.prepend("I am appending some content here...");
+    statute.append(...sections);
+    return [label, statute];
   }
 
-  static async loadChapter(chapterNumber) {
-    const url = new Url("https://appdev.ocdla.org/books-online/index.php");
 
-    url.buildQuery("chapter", chapterNumber.toString());
-
-    const client = new HttpClient();
-    const req = new Request(url.toString());
-    const resp = await client.send(req);
-    const msword = await OrsChapter.fromResponse(resp);
-    msword.chapterNum = chapterNumber;
-    return OrsChapter.toStructuredChapter(msword);
-  }
 
 
   static getCss() {

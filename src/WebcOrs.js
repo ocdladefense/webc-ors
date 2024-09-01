@@ -50,9 +50,9 @@ export default class WebcOrs extends HTMLDivElement {
       })
       .then(documentNode => {
 
-        return [documentNode.getContentNode()];
-        // let sections = [documentNode.getSection(this.sectionNumber)];
-        // return sections;
+        // return [documentNode.getContentNode()];
+        let sections = [documentNode.getSection(this.sectionNumber)];
+        return sections;
       })
       .then((nodes) => {
         if (null == nodes) {

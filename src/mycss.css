@@ -2,5 +2,7 @@
 
 div[is="webc-ors"] {
     border: 1px solid blue;
-    padding:8px;
+    padding: 8px;
+    max-height: 250px;
+    overflow: scroll;
 }

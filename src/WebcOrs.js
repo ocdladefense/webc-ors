@@ -35,7 +35,7 @@ export default class WebcOrs extends HTMLDivElement {
   }
 
   // Called each time the element is appended to the window/another element.
-  async connectedCallback() {
+  connectedCallback() {
     let nodes = [];
 
     const shadow = this.attachShadow({ mode: "open" });
@@ -43,25 +43,34 @@ export default class WebcOrs extends HTMLDivElement {
     let styles = document.createElement("style");
     styles.innerText = WebcOrs.getCss();
 
-    let foo = WebcOrs.loadChapter(this.chapterNumber);
+    WebcOrs.loadChapter(this.chapterNumber)
+      .then((chapter) => {
 
-    foo.then(chapter => {
-      let sections = [chapter.getSection(this.sectionNumber)];
-      return sections;
-    })
-    .then(nodes => {
-      if (null == nodes) {
-        throw new Error("Could not retrieve section for " + [chapterNumber,sectionNumber].join("."));
-      }
-      let fragment = new DocumentFragment();
-      let copies = nodes.map(node => node.cloneNode(true));
-      fragment.append(...copies);
-      this.shadowRoot.appendChild(fragment);
-    })
-    .catch(e => {
+        return chapter.getDocumentNode();
+      })
+      .then(documentNode => {
+
+        return [documentNode.getContentNode()];
+        // let sections = [documentNode.getSection(this.sectionNumber)];
+        // return sections;
+      })
+      .then((nodes) => {
+        if (null == nodes) {
+          throw new Error(
+            "Could not retrieve section for " +
+              [chapterNumber, sectionNumber].join(".")
+          );
+        }
+        let fragment = new DocumentFragment();
+        let copies = nodes.map((node) => node.cloneNode(true));
+        fragment.append(...copies);
+        this.shadowRoot.appendChild(fragment);
+      })
+      .catch((e) => {
         console.error(e);
+        throw e;
         // nodes.push(document.createTextNode("An error occurred: " + e.message));
-    });
+      });
 
   }
 

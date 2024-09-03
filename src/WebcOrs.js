@@ -44,6 +44,8 @@ export default class WebcOrs extends HTMLDivElement {
     let styles = document.createElement("style");
     styles.innerText = WebcOrs.getCss();
 
+    this.shadowRoot.appendChild(styles);
+
     WebcOrs.loadChapter(this.chapterNumber)
       .then((chapter) => {
 

@@ -1,8 +1,12 @@
 
 
 div[is="webc-ors"] {
-    border: 1px solid blue;
-    padding: 8px;
-    max-height: 250px;
-    overflow: scroll;
+    /* border: 1px solid blue; */
+        padding: 8px;
+        /* max-height: 250px; */
+        /* overflow-y: scroll; */
+        font-family: monospace;
+        margin-left: 20px;
+        border-left: 2px solid;
 }
+

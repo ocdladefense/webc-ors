@@ -1,5 +1,6 @@
 import HttpClient from "@ocdla/lib-http/HttpClient.js";
 import Url from "@ocdla/lib-http/Url.js";
+import Outline from "@ocdladefense/ors/src/Outline.js";
 import OrsChapter from "@ocdladefense/ors/src/Chapter.js";
 import './mycss.css';
 
@@ -49,9 +50,11 @@ export default class WebcOrs extends HTMLDivElement {
         return chapter.getDocumentNode();
       })
       .then(documentNode => {
+        let section = documentNode.getSection(this.sectionNumber);
+        console.log("Section toString()", section.toString());
+        console.log("Section getText()", section.getText());
 
-        // return [documentNode.getContentNode()];
-        let sections = [documentNode.getSection(this.sectionNumber)];
+        let sections = [section.toNode()];
         return sections;
       })
       .then((nodes) => {
@@ -114,10 +117,6 @@ export default class WebcOrs extends HTMLDivElement {
 
     // For multiple references, this should iterate to create separate labels and statutes.
     label.appendChild(document.createTextNode(this.references[0]));
-    
-
-
-
     
     // statute.prepend("I am appending some content here...");
     statute.append(...sections);

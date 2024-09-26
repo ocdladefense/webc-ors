@@ -1,19 +1,19 @@
 import HttpClient from "@ocdla/lib-http/HttpClient.js";
 import Url from "@ocdla/lib-http/Url.js";
-import Outline from "@ocdladefense/ors/src/Outline.js";
+import {parseReferenceV1, parseChapterAndSection, parseSubsections, parseReferences, toSelectors} from "@ocdladefense/ors/src/ReferenceParser.js";
 import OrsChapter from "@ocdladefense/ors/src/Chapter.js";
 import './mycss.css';
 
 
 const ORS_ENDPOINT = "https://appdev.ocdla.org/books-online/index.php";
 
-
+  
 
 export default class WebcOrs extends HTMLDivElement {
-  references;
+  references = null;
 
   // The ORS chapter to display.
-  chapterNumber;
+  chapterNumber = null;
 
   // The chapter section to display.
   sectionNumber = null;
@@ -23,22 +23,27 @@ export default class WebcOrs extends HTMLDivElement {
 
   chapter = null;
 
+  // Used when labelling this section.
+  label = null;
+
   static cache = {};
+
+
 
   constructor() {
     super();
-    let refs = this.getAttribute("ref") && this.getAttribute("ref").split(" ")[1];
-    this.references = refs.split(",").map((ref) => ref.trim());
-    // This ensures we get a chapter and a section even if the ref attribute contains subsection elements
-    // of the form 138.001(1)(a).
-    [this.chapterNumber, this.sectionNumber] = this.references[0].split(/\.|\(/).map(str => parseInt(str));
+    this.label = this.getAttribute("ref") && this.getAttribute("ref").split(" ")[1];
+    this.useLabel = this.getAttribute("label") == "false" || true;
+    [this.chapterNumber, this.sectionNumber] = parseReferenceV1(this.label);
     this.references = [[this.chapterNumber, this.sectionNumber].join(".")];
+    this.selectors = toSelectors(this.label).map(sel => `[id*="${sel}"]`);
+    console.log("WEBC-ORS SELECTORS: ", this.selectors);
   }
 
   // Called each time the element is appended to the window/another element.
   connectedCallback() {
     let nodes = [];
-
+    let selectorString = this.selectors.join(",");
     const shadow = this.attachShadow({ mode: "open" });
 
     let styles = document.createElement("style");
@@ -48,27 +53,23 @@ export default class WebcOrs extends HTMLDivElement {
 
     WebcOrs.loadChapter(this.chapterNumber)
       .then((chapter) => {
-
-        return chapter.getDocumentNode();
-      })
-      .then(documentNode => {
-        let section = documentNode.getSection(this.sectionNumber);
-        console.log("Section toString()", section.toString());
-        console.log("Section getText()", section.getText());
-
-        let sections = [section.toNode()];
-        return sections;
+        return chapter.querySelectorAll(selectorString);
       })
       .then((nodes) => {
-        if (null == nodes) {
-          throw new Error(
-            "Could not retrieve section for " +
-              [chapterNumber, sectionNumber].join(".")
-          );
+        if (null == nodes || nodes.length == 0) {
+          console.warn("No nodes were found for <webc-ors> (using "+selectorString+")");
+          return;
         }
         let fragment = new DocumentFragment();
         let copies = nodes.map((node) => node.cloneNode(true));
+        let label = document.createElement("span");
+
+        label.setAttribute("class", "section-label");
+
+        // For multiple references, this should iterate to create separate labels and statutes.
+        label.appendChild(document.createTextNode(this.label));
         fragment.append(...copies);
+        if(this.useLabel) fragment.prepend(label);
         this.shadowRoot.appendChild(fragment);
       })
       .catch((e) => {
@@ -91,8 +92,11 @@ export default class WebcOrs extends HTMLDivElement {
 
       const client = new HttpClient();
       const req = new Request(url.toString());
-      const chapter = client.send(req).then( resp => OrsChapter.fromResponse(resp, chapterNumber) )
-        .then( chapter => {console.log(chapter.toString()); return chapter;});
+      const chapter = client.send(req).then(
+        resp => OrsChapter.fromResponse(resp, chapterNumber) )
+        .then( chapter => {
+          // console.log(chapter.toString());
+          return chapter;});
 
       WebcOrs.cache[chapterNumber.toString()] = chapter;
       return WebcOrs.cache[chapterNumber.toString()];
@@ -118,7 +122,7 @@ export default class WebcOrs extends HTMLDivElement {
     label.setAttribute("class", "section-label");
 
     // For multiple references, this should iterate to create separate labels and statutes.
-    label.appendChild(document.createTextNode(this.references[0]));
+    label.appendChild(document.createTextNode(this.getAttribute("ref")));
     
     // statute.prepend("I am appending some content here...");
     statute.append(...sections);
@@ -161,6 +165,16 @@ export default class WebcOrs extends HTMLDivElement {
 
         .level-3 {
             margin-left: 45px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        .level-4 {
+            margin-left: 60px;
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+        .level-5 {
+            margin-left: 75px;
             margin-top: 5px;
             margin-bottom: 5px;
         }

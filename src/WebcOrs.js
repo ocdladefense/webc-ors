@@ -1,6 +1,6 @@
 import HttpClient from "@ocdla/lib-http/HttpClient.js";
 import Url from "@ocdla/lib-http/Url.js";
-import {parseReferenceV1, parseChapterAndSection, parseSubsections, parseReferences, toSelectors} from "@ocdladefense/ors/src/ReferenceParser.js";
+import {parseReferenceV1, toSelectors} from "@ocdladefense/ors/src/ReferenceParser.js";
 import OrsChapter from "@ocdladefense/ors/src/Chapter.js";
 import './mycss.css';
 
@@ -74,8 +74,6 @@ export default class WebcOrs extends HTMLDivElement {
       })
       .catch((e) => {
         console.error(e);
-        throw e;
-        // nodes.push(document.createTextNode("An error occurred: " + e.message));
       });
 
   }
@@ -84,7 +82,7 @@ export default class WebcOrs extends HTMLDivElement {
 
   static loadChapter(chapterNumber) {
 
-    // If the promise that will eventually resolve to this 
+    // The cache should store a promise that resolves to an ORS Chapter object.
     return WebcOrs.cache[chapterNumber.toString()] ||  (function(chapterNumber) {
 
       const url = new Url("https://appdev.ocdla.org/books-online/index.php");
@@ -92,41 +90,12 @@ export default class WebcOrs extends HTMLDivElement {
 
       const client = new HttpClient();
       const req = new Request(url.toString());
-      const chapter = client.send(req).then(
-        resp => OrsChapter.fromResponse(resp, chapterNumber) )
-        .then( chapter => {
-          // console.log(chapter.toString());
-          return chapter;});
-
+      const chapter = client.send(req)
+      .then(resp => OrsChapter.fromResponse(resp, chapterNumber));
+      
       WebcOrs.cache[chapterNumber.toString()] = chapter;
       return WebcOrs.cache[chapterNumber.toString()];
     })(chapterNumber);
-  }
-
-
-  buildNode(sections) {
-    let refHtml = [];
-    let error = null;
-
-    // Thee elements will be appended to the shodow DOM.
-    let statute, label, styles;
-
-    // We will display the statute text from the Oregon Legislature website;
-    // and the label will be the ORS citation.
-    // Add some styling as well.
-    statute = document.createElement("div");
-    label = document.createElement("span");
-    
-    
-    statute.setAttribute("class", "statute");
-    label.setAttribute("class", "section-label");
-
-    // For multiple references, this should iterate to create separate labels and statutes.
-    label.appendChild(document.createTextNode(this.getAttribute("ref")));
-    
-    // statute.prepend("I am appending some content here...");
-    statute.append(...sections);
-    return [label, statute];
   }
 
 
